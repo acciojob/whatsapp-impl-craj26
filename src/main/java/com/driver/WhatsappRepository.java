@@ -42,7 +42,7 @@ public class WhatsappRepository {
         return  newGroup;
     }
     public int createMessage(String content){
-        Message message=new Message(messageId++,content);
+        Message message=new Message(this.messageId++,content);
         return message.getId();
     }
     public int sendMessage(Message message,User sender, Group group) throws Exception{
@@ -62,20 +62,33 @@ public class WhatsappRepository {
 
             }
         }
-        throw new Exception("sender is not a member of the group");
+        throw new Exception("You are not allowed to send message");
     }
     public String changeAdmin(User approver, User user, Group group) throws Exception{
-        if(!groupUserMap.containsKey(group)){
-            throw new Exception("Group does not exist");
+        //Throw "Group does not exist" if the mentioned group does not exist
+        //Throw "Approver does not have rights" if the approver is not the current admin of the group
+        //Throw "User is not a participant" if the user is not a part of the group
+        //Change the admin of the group to "user" and return "SUCCESS".
+
+        if(adminMap.containsKey(group)){
+            if(adminMap.get(group).equals(approver)){
+                List<User> participants = groupUserMap.get(group);
+                Boolean userFound = false;
+                for(User participant: participants){
+                    if(participant.equals(user)){
+                        userFound = true;
+                        break;
+                    }
+                }
+                if(userFound){
+                    adminMap.put(group, user);
+                    return "SUCCESS";
+                }
+                throw new Exception("User is not a participant");
+            }
+            throw new Exception("Approver does not have rights");
         }
-        if(adminMap.get(group) != approver){
-            throw new Exception("the approver is not the current admin of the group");
-        }
-        if(!groupUserMap.get(group).contains(user)){
-            throw new Exception("User is not a participant");
-        }
-        adminMap.replace(group,user);
-        return "SUCCESS";
+        throw new Exception("Group does not exist");
     }
     public int removeUser(User user) throws Exception{
         //If user is not found in any group, throw "User not found" exception
