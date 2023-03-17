@@ -1,6 +1,7 @@
 package com.driver;
 
 import java.util.*;
+import java.time.LocalDate;
 
 import org.springframework.stereotype.Repository;
 
@@ -42,27 +43,35 @@ public class WhatsappRepository {
         return  newGroup;
     }
     public int createMessage(String content){
-        Message message=new Message(this.messageId++,content);
+        // The 'i^th' created message has message id 'i'.
+        // Return the message id.
+        this.messageId += 1;
+        Message message = new Message(messageId, content);
         return message.getId();
     }
     public int sendMessage(Message message,User sender, Group group) throws Exception{
-        if(!groupUserMap.containsKey(group)){
-            throw new Exception("Group does not exist");
-        }
-        for(User user: groupUserMap.get(group)){
-            if(user.getMobile() == sender.getMobile()){
-                if(groupMessageMap.containsKey(group)){
-                    groupMessageMap.get(group).add(message);
-                }else{
-                    List<Message> temp = new ArrayList<>();
-                    temp.add(message);
-                    groupMessageMap.put(group, temp);
+        //Throw "Group does not exist" if the mentioned group does not exist
+        //Throw "You are not allowed to send message" if the sender is not a member of the group
+        //If the message is sent successfully, return the final number of messages in that group.
+        if(adminMap.containsKey(group)){
+            List<User> users = groupUserMap.get(group);
+            Boolean userFound = false;
+            for(User user: users){
+                if(user.equals(sender)){
+                    userFound = true;
+                    break;
                 }
-                return message.getId();
-
             }
+            if(userFound){
+                senderMap.put(message, sender);
+                List<Message> messages = groupMessageMap.get(group);
+                messages.add(message);
+                groupMessageMap.put(group, messages);
+                return messages.size();
+            }
+            throw new Exception("You are not allowed to send message");
         }
-        throw new Exception("You are not allowed to send message");
+        throw new Exception("Group does not exist");
     }
     public String changeAdmin(User approver, User user, Group group) throws Exception{
         //Throw "Group does not exist" if the mentioned group does not exist
