@@ -28,8 +28,8 @@ public class WhatsappController {
         //Otherwise, create the user and return "SUCCESS"
 
 
-        whatsappService.createUser(name, mobile);
-        return "SUCCESS";
+        return whatsappService.createUser(name, mobile);
+
     }
 
     @PostMapping("/add-group")
