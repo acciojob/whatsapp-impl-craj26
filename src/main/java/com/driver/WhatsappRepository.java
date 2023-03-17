@@ -1,7 +1,7 @@
 package com.driver;
 
-import java.util.*;
 import java.time.LocalDate;
+import java.util.*;
 
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +14,6 @@ public class WhatsappRepository {
     private HashMap<Group, List<Message>> groupMessageMap;
     private HashMap<Message, User> senderMap;
     private HashMap<Group, User> adminMap;
-    //usermap
     private HashSet<String> userMobile;
     private int customGroupCount;
     private int messageId;
@@ -28,19 +27,34 @@ public class WhatsappRepository {
         this.customGroupCount = 0;
         this.messageId = 0;
     }
-
-    public Group createGroup(List<User> users){
-        //  If there are only 2 users, the group is a personal chat
-        Group newGroup;
-        if(users.size()==2){
-            newGroup = new Group(users.get(1).getName(), users.size());
-        }else{
-            newGroup = new Group("Group "+this.customGroupCount++, users.size());
+    public String createUser(String name, String mobile) throws Exception {
+        //If the mobile number exists in database, throw "User already exists" exception
+        //Otherwise, create the user and return "SUCCESS"
+        if(userMobile.contains(mobile)){
+            throw new Exception("User already exists");
         }
-        groupUserMap.put(newGroup, users);
-        adminMap.put(newGroup, users.get(0));
-        groupMessageMap.put(newGroup, new ArrayList<Message>());
-        return  newGroup;
+        userMobile.add(mobile);
+        User user = new User(name, mobile);
+        return "SUCCESS";
+    }
+    public Group createGroup(List<User> users){
+        // The list contains at least 2 users where the first user is the admin.
+        // If there are only 2 users, the group is a personal chat and the group name should be kept as the name of the second user(other than admin)
+        // If there are 2+ users, the name of group should be "Group customGroupCount". For example, the name of first group would be "Group 1", second would be "Group 2" and so on.
+        // If group is successfully created, return group.
+        if(users.size()==2){
+            Group group = new Group(users.get(1).getName(), 2);
+            adminMap.put(group, users.get(0));
+            groupUserMap.put(group, users);
+            groupMessageMap.put(group, new ArrayList<Message>());
+            return group;
+        }
+        this.customGroupCount += 1;
+        Group group = new Group(new String("Group "+this.customGroupCount), users.size());
+        adminMap.put(group, users.get(0));
+        groupUserMap.put(group, users);
+        groupMessageMap.put(group, new ArrayList<Message>());
+        return group;
     }
     public int createMessage(String content){
         // The 'i^th' created message has message id 'i'.
@@ -49,7 +63,7 @@ public class WhatsappRepository {
         Message message = new Message(messageId, content);
         return message.getId();
     }
-    public int sendMessage(Message message,User sender, Group group) throws Exception{
+    public int sendMessage(Message message, User sender, Group group) throws Exception{
         //Throw "Group does not exist" if the mentioned group does not exist
         //Throw "You are not allowed to send message" if the sender is not a member of the group
         //If the message is sent successfully, return the final number of messages in that group.
@@ -152,6 +166,7 @@ public class WhatsappRepository {
         }
         throw new Exception("User not found");
     }
+
     public String findMessage(Date start, Date end, int K) throws Exception{
         // Find the Kth latest message between start and end (excluding start and end)
         // If the number of messages between given time is less than K, throw "K is greater than the number of messages" exception
@@ -174,15 +189,5 @@ public class WhatsappRepository {
             }
         });
         return filteredMessages.get(K-1).getContent();
-    }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-    public String createUser(String name, String mobile) throws Exception {
-        if(userMobile.contains(mobile)){
-            throw new Exception("User already exists");
-        }
-        User user=new User(name,mobile);
-        userMobile.add(mobile);
-        return "SUCCESS";
     }
 }
