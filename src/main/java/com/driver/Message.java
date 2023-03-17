@@ -9,10 +9,10 @@ public class Message {
 
 
 
-    public Message(int id, String content, Date timestamp) {
+    public Message(int id, String content) {
         this.id = id;
         this.content = content;
-        this.timestamp = new Date();
+        this.timestamp = timestamp;
     }
 
     public int getId() {
@@ -32,10 +32,10 @@ public class Message {
     }
 
     public Date getTimestamp() {
-        return new Date();
+        return timestamp;
     }
 
     public void setTimestamp(Date timestamp) {
-        this.timestamp = new Date();
+        this.timestamp = timestamp;
     }
 }
